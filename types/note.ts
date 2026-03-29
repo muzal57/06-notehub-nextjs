@@ -8,3 +8,13 @@ export interface Note {
 }
 
 export type NoteFormData = Pick<Note, "title" | "content" | "tag">;
+
+export interface NotesResponse {
+  notes: Note[];
+  totalPages: number;
+}
+
+export interface NotesResponse {
+  notes: Note[];
+  totalPages: number;
+}

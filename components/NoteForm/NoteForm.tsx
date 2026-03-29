@@ -1,79 +1,108 @@
 "use client";
 
-import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Formik, Form, Field, ErrorMessage } from "formik";
+import * as Yup from "yup";
 import { addNote } from "@/lib/api";
 import { NoteFormData } from "@/types/note";
 import css from "./NoteForm.module.css";
 
-const NoteForm = () => {
+export interface NoteFormProps {
+  onNoteAdded?: () => void;
+  onCancel?: () => void;
+}
+
+const validationSchema = Yup.object({
+  title: Yup.string()
+    .min(3, "Title is too short")
+    .required("Title is required"),
+  content: Yup.string()
+    .max(500, "Content must be less than 500 characters")
+    .optional(),
+  tag: Yup.string()
+    .oneOf(["Personal", "Work", "Study", "Important"], "Invalid tag")
+    .required("Tag is required"),
+});
+
+const initialValues: NoteFormData = {
+  title: "",
+  content: "",
+  tag: "",
+};
+
+const NoteForm = ({ onNoteAdded, onCancel }: NoteFormProps) => {
   const queryClient = useQueryClient();
-  const [formData, setFormData] = useState<NoteFormData>({
-    title: "",
-    content: "",
-    tag: "",
-  });
 
   const addNoteMutation = useMutation({
     mutationFn: addNote,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notes"] });
-      setFormData({ title: "", content: "", tag: "" });
+      onNoteAdded?.();
     },
   });
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    addNoteMutation.mutate(formData);
+  const handleSubmit = (values: NoteFormData) => {
+    addNoteMutation.mutate(values);
   };
 
   return (
-    <form onSubmit={handleSubmit} className={css.form}>
-      <input
-        type="text"
-        name="title"
-        placeholder="Title"
-        value={formData.title}
-        onChange={handleChange}
-        required
-        className={css.input}
-      />
-      <textarea
-        name="content"
-        placeholder="Content"
-        value={formData.content}
-        onChange={handleChange}
-        required
-        className={css.textarea}
-      />
-      <input
-        type="text"
-        name="tag"
-        placeholder="Tag"
-        value={formData.tag}
-        onChange={handleChange}
-        className={css.input}
-      />
-      <button
-        type="submit"
-        disabled={addNoteMutation.isPending}
-        className={css.button}
-      >
-        {addNoteMutation.isPending ? "Adding..." : "Add Note"}
-      </button>
-      {addNoteMutation.isError && (
-        <p className={css.error}>
-          Error adding note: {addNoteMutation.error?.message}
-        </p>
+    <Formik
+      initialValues={initialValues}
+      validationSchema={validationSchema}
+      onSubmit={handleSubmit}
+    >
+      {({ isSubmitting }) => (
+        <Form className={css.form}>
+          <div className={css.formGroup}>
+            <label htmlFor="title">Title</label>
+            <Field name="title" type="text" className={css.input} />
+            <ErrorMessage name="title" component="div" className={css.error} />
+          </div>
+
+          <div className={css.formGroup}>
+            <label htmlFor="content">Content (optional)</label>
+            <Field name="content" as="textarea" className={css.textarea} />
+            <ErrorMessage
+              name="content"
+              component="div"
+              className={css.error}
+            />
+          </div>
+
+          <div className={css.formGroup}>
+            <label htmlFor="tag">Tag</label>
+            <Field name="tag" as="select" className={css.select}>
+              <option value="" label="Select a tag" />
+              <option value="Personal">Personal</option>
+              <option value="Work">Work</option>
+              <option value="Study">Study</option>
+              <option value="Important">Important</option>
+            </Field>
+            <ErrorMessage name="tag" component="div" className={css.error} />
+          </div>
+
+          <div className={css.actions}>
+            <button
+              type="button"
+              onClick={onCancel}
+              className={css.cancelButton}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting || addNoteMutation.isPending}
+              className={css.submitButton}
+            >
+              {addNoteMutation.isPending ? "Adding..." : "Add Note"}
+            </button>
+          </div>
+          {addNoteMutation.isError && (
+            <p className={css.error}>Error: {addNoteMutation.error?.message}</p>
+          )}
+        </Form>
       )}
-    </form>
+    </Formik>
   );
 };
 
