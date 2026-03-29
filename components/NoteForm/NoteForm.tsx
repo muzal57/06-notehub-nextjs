@@ -8,7 +8,6 @@ import { NoteFormData } from "@/types/note";
 import css from "./NoteForm.module.css";
 
 export interface NoteFormProps {
-  onNoteAdded?: () => void;
   onCancel?: () => void;
 }
 
@@ -20,7 +19,7 @@ const validationSchema = Yup.object({
     .max(500, "Content must be less than 500 characters")
     .optional(),
   tag: Yup.string()
-    .oneOf(["Personal", "Work", "Study", "Important"], "Invalid tag")
+    .oneOf(["Todo", "Work", "Personal", "Meeting", "Shopping"], "Invalid tag")
     .required("Tag is required"),
 });
 
@@ -30,14 +29,14 @@ const initialValues: NoteFormData = {
   tag: "",
 };
 
-const NoteForm = ({ onNoteAdded, onCancel }: NoteFormProps) => {
+const NoteForm = ({ onCancel }: NoteFormProps) => {
   const queryClient = useQueryClient();
 
   const addNoteMutation = useMutation({
     mutationFn: addNote,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notes"] });
-      onNoteAdded?.();
+      onCancel?.();
     },
   });
 
@@ -73,10 +72,11 @@ const NoteForm = ({ onNoteAdded, onCancel }: NoteFormProps) => {
             <label htmlFor="tag">Tag</label>
             <Field name="tag" as="select" className={css.select}>
               <option value="" label="Select a tag" />
-              <option value="Personal">Personal</option>
+              <option value="Todo">Todo</option>
               <option value="Work">Work</option>
-              <option value="Study">Study</option>
-              <option value="Important">Important</option>
+              <option value="Personal">Personal</option>
+              <option value="Meeting">Meeting</option>
+              <option value="Shopping">Shopping</option>
             </Field>
             <ErrorMessage name="tag" component="div" className={css.error} />
           </div>

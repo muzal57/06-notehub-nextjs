@@ -1,5 +1,10 @@
 import axios from "axios";
-import { Note, NoteFormData, NotesResponse } from "@/types/note";
+import { Note, NoteFormData } from "@/types/note";
+
+export interface NotesResponse {
+  notes: Note[];
+  totalPages: number;
+}
 
 const API_BASE_URL = "https://notehub-public.goit.study/api"; // ПЕРЕВІРТЕ ВАШ URL
 const notehubToken = process.env.NEXT_PUBLIC_NOTEHUB_TOKEN;
@@ -22,7 +27,7 @@ export const fetchNotes = async (
   limit: number = 10,
 ): Promise<NotesResponse> => {
   const response = await axiosInstance.get<NotesResponse>("/notes", {
-    params: { q: query, _page: page, _limit: limit },
+    params: { search: query, page: page, perPage: limit },
   });
   return response.data;
 };

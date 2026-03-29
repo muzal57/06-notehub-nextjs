@@ -6,10 +6,10 @@ import { fetchNotes } from "@/lib/api";
 import NoteList from "@/components/NoteList/NoteList";
 import NoteForm from "@/components/NoteForm/NoteForm";
 import SearchBox from "@/components/SearchBox/SearchBox"; // Changed from SearchForm
-import Modal from "@/components/Modal/Modal"; // New import
-import Pagination from "@/components/Pagination/Pagination"; // New import
+import Modal from "@/components/Modal/Modal";
+import Pagination from "@/components/Pagination/Pagination";
 import css from "./Notes.module.css";
-import { NotesResponse } from "@/types/note"; // Import NotesResponse
+import { NotesResponse } from "@/lib/api"; // Import NotesResponse from lib/api
 
 const NotesClient = () => {
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -88,7 +88,7 @@ const NotesClient = () => {
 
       {isModalOpen && (
         <Modal title="Create New Note" onClose={closeModal}>
-          <NoteForm onNoteAdded={closeModal} />
+          <NoteForm onCancel={closeModal} />
         </Modal>
       )}
     </div>
